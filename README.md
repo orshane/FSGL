@@ -2,19 +2,31 @@ FSGL – From Scratch Graphics Library
 
 FSGL is a minimalist, beginner-friendly graphics library built on OpenGL and GLFW. Run 2D & 3D demos in under 30 lines of code. Perfect for learning graphics without the pain of boilerplate.
 
+
 Features
+
 🎨 Simple color management: fsSetColor(r, g, b)
+
 ✏️ Draw lines: fsDrawLine(x1, y1, x2, y2)
+
 🔺 Draw triangles (wireframe or filled): fsDrawTriangle(x1, y1, x2, y2, x3, y3, fill)
+
 🖥️ Create windows: fsNewWindow(title, width, height)
+
 🔄 Event loop: fsPollEvents(window, renderCallback)
+
 ⚡ Lightweight, no heavy boilerplate — 28 lines for a working triangle demo
+
 Quick Start
+
 Run the demo binary
+
 ./FSGL_TriangleDemo. 
+
 Or compile from source
 clang++ *.cpp -o FSGL -g -lglfw -lGL -lGLEW -lpthread -lX11
 ./FSGL
+
 Minimal Example
 ```cpp
 #include "fsgl.hpp"
