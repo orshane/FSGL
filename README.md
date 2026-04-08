@@ -11,7 +11,7 @@ Features
 ⚡ Lightweight, no heavy boilerplate — 28 lines for a working triangle demo
 Quick Start
 Run the demo binary
-./FSGL_TriangleDemo
+./FSGL_TriangleDemo. 
 Or compile from source
 clang++ *.cpp -o FSGL -g -lglfw -lGL -lGLEW -lpthread -lX11
 ./FSGL
