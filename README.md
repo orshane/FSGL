@@ -52,17 +52,25 @@ int main() {
     return 0;
 }
 ```
+
 Why FSGL?
+
 🛠 Beginner-friendly – focus on graphics, not setup
+
 ⚡ Fast iteration – demos run in under 30 lines
+
 💎 Expandable – add shaders, 3D primitives, or custom rendering easily
+
 License
 
 FSGL is released under the Apache License 2.0.
 
 You can use, modify, and distribute FSGL freely
+
 Must include the original copyright notice
+
 Provides explicit patent protection
+
 No warranty provided
 
 See the LICENSE file for full details.
