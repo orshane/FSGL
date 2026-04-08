@@ -53,6 +53,12 @@ int main() {
 }
 ```
 
+## FSGL Demo
+
+[![Watch FSGL Triangle Demo](https://img.youtube.com/vi/X5s8IfLYh_A/0.jpg)](https://youtu.be/X5s8IfLYh_A)
+
+[![Watch FSGL Wireframe 3d Demo](https://img.youtube.com/vi/x_imdrvFcg4/0.jpg)](https://youtu.be/x_imdrvFcg4)
+
 Why FSGL?
 
 🛠 Beginner-friendly – focus on graphics, not setup
