@@ -16,6 +16,7 @@ Or compile from source
 clang++ *.cpp -o FSGL -g -lglfw -lGL -lGLEW -lpthread -lX11
 ./FSGL
 Minimal Example
+```cpp
 #include "fsgl.hpp"
 
 void render() {
@@ -38,6 +39,7 @@ int main() {
     fsgl::fs::fsDrop();
     return 0;
 }
+```
 Why FSGL?
 🛠 Beginner-friendly – focus on graphics, not setup
 ⚡ Fast iteration – demos run in under 30 lines
