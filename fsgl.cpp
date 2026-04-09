@@ -4,7 +4,25 @@
 #include <iostream>
 
 namespace fsgl {
-    static float currentR = 1.0, currentG = 1.0, currentB = 1.0;
+
+    static GLuint compileShader(GLenum type, const char* src) {
+        GLuint shader = glCreateShader(type);
+        glShaderSource(shader, 1, &src, nullptr);
+        glCompileShader(shader);
+
+        int success;
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+
+        if(!success) {
+            char log[512];
+            glGetShaderInfoLog(shader, 512, nullptr, log);
+            std::cerr << "Shader compile error: \n" << log << std::endl;
+        }
+
+        return shader;
+    }
+
+    static float currentR = 1.0, currentG = 1.0, currentB = 1.0, currentA = 1.0f;
 
 
     fsResult fs::fsInit() {
@@ -58,7 +76,7 @@ namespace fsgl {
 
     void fs::fsDrawLine(float x1, float y1, float x2, float y2) {
         glBegin(GL_LINES);
-        glColor3f(currentR, currentG, currentB);
+        glColor4f(currentR, currentG, currentB, currentA);
         glVertex2f(x1, y1);
         glVertex2f(x2, y2);
         glEnd();
@@ -85,8 +103,60 @@ namespace fsgl {
         }
     }
 
+    void fs::fsSetLineWidth(float w) {
+        glLineWidth(w);
+    }
+
+    void fs::fsSetAlpha(float a) {
+        currentA = a;
+    }
+
     void fs::fsDrop() {
         glfwTerminate();
         std::cout << "fsDrop: Successful drop.";
+    }
+
+    fsShader fs::fsCreateShader(const char* vertexSrc, const char* fragmentSrc) {
+        GLuint vs = compileShader(GL_VERTEX_SHADER, vertexSrc);
+        GLuint fs = compileShader(GL_FRAGMENT_SHADER, fragmentSrc);
+
+        GLuint program = glCreateProgram();
+        glAttachShader(program, vs);
+        glAttachShader(program, fs);
+        glLinkProgram(program);
+
+        int success;
+        glGetProgramiv(program, GL_LINK_STATUS, &success);
+
+        if(!success) {
+            char log[512];
+            glGetProgramInfoLog(program, 512, nullptr, log);
+            std::cerr << "Shader link error: \n" << log << std::endl;
+        }
+
+        glDeleteShader(vs);
+        glDeleteShader(fs);
+
+        return program;
+    }
+
+    void fs::fsUseShader(fsShader shader) {
+        glUseProgram(shader);
+    }
+
+    void fs::fsEnableBlend() {
+        glEnable(GL_BLEND);
+    }
+
+    void fs::fsDisableBlend() {
+        glDisable(GL_BLEND);
+    }
+
+    void fs::fsSetBlendAdditive() {
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    }
+
+    void fs::fsSetBlendAlpha() {
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
 }

@@ -16,8 +16,12 @@ namespace fsgl {
         FSERR = 1
     };
 
+    typedef uint fsShader;
+
     class fs {
     public:
+        // Core and Drawing
+
         static fsResult fsInit();
         static fsResult fsSetContext(fsWindow win);
         static fsResult fsInitContext();
@@ -33,6 +37,17 @@ namespace fsgl {
             float x3, float y3,
             bool fill = false
         );
+        static void fsSetLineWidth(float w);
+        static void fsSetAlpha(float a);
         static void fsDrop();
+
+        // Shader API
+        
+        fsShader fsCreateShader(const char* vertexSrc, const char* fragmentSrc);
+        static void fsUseShader(fsShader shader);
+        static void fsEnableBlend();
+        static void fsDisableBlend();
+        static void fsSetBlendAdditive();
+        static void fsSetBlendAlpha();
     };
 }
