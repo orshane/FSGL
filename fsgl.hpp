@@ -1,26 +1,27 @@
-#pragma once 
+#pragma once
+
 #include <string>
 #include <cstdbool>
+#include <cstdint>
 
 struct GLFWwindow;
-
 
 namespace fsgl {
 
     typedef GLFWwindow* fsWindow;
-
     typedef void (*fsLoopCallback)();
+    typedef uint32_t fsShader;
+    typedef uint32_t fsVertexBuffer;
+    typedef uint32_t fsVertexArray;
 
     enum fsResult {
         FSOK = 0,
         FSERR = 1
     };
 
-    typedef uint fsShader;
-
     class fs {
     public:
-        // Core and Drawing
+        // Core and Graphics
 
         static fsResult fsInit();
         static fsResult fsSetContext(fsWindow win);
@@ -42,12 +43,24 @@ namespace fsgl {
         static void fsDrop();
 
         // Shader API
-        
-        fsShader fsCreateShader(const char* vertexSrc, const char* fragmentSrc);
+
+        static fsShader fsCreateShader(const char* vertexSrc, const char* fragmentSrc);
         static void fsUseShader(fsShader shader);
         static void fsEnableBlend();
         static void fsDisableBlend();
         static void fsSetBlendAdditive();
         static void fsSetBlendAlpha();
+
+        // Modern Functions
+        
+        static fsVertexBuffer fsCreateVertexBuffer(const float* vertices, size_t size);
+        static fsVertexArray fsCreateVertexArray();
+        static void fsBindVertexArray(fsVertexArray vao);
+        static void fsBindVertexBuffer(fsVertexBuffer vbo);
+        static void fsSetVertexAttribute(uint32_t index, int size, int stride, int offset);
+        static void fsDrawArrays(int mode, int first, int count);
+        static void fsDeleteVertexArray(fsVertexArray vao);
+        static void fsDeleteVertexBuffer(fsVertexBuffer vbo);
+        static void fsDeleteShader(fsShader shader);
     };
 }

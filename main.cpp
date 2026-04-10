@@ -1,98 +1,110 @@
 #include "fsgl.hpp"
-#include <cmath>
+#include <iostream>
 
-struct Vec3 { float x,y,z; };
+const char* vertexShaderSrc = R"(
+#version 330 core
+layout (location = 0) in vec2 aPos;
+layout (location = 1) in vec3 aColor;
 
-// cube vertices
-Vec3 cube[8] = {
-    {-0.5,-0.5,-0.5},{0.5,-0.5,-0.5},
-    {0.5,0.5,-0.5},{-0.5,0.5,-0.5},
-    {-0.5,-0.5,0.5},{0.5,-0.5,0.5},
-    {0.5,0.5,0.5},{-0.5,0.5,0.5}
-};
+out vec3 vColor;
 
-int edges[12][2] = {
-    {0,1},{1,2},{2,3},{3,0},
-    {4,5},{5,6},{6,7},{7,4},
-    {0,4},{1,5},{2,6},{3,7}
-};
-
-float angle = 0.0f;
-
-// rotate in 3D
-Vec3 rotate(Vec3 v) {
-    float c = cos(angle), s = sin(angle);
-
-    // Y rotation
-    float x = v.x * c + v.z * s;
-    float z = -v.x * s + v.z * c;
-
-    // X rotation
-    float y = v.y * c - z * s;
-    z = v.y * s + z * c;
-
-    return {x,y,z};
+void main() {
+    gl_Position = vec4(aPos, 0.0, 1.0);
+    vColor = aColor;
 }
+)";
 
-void DrawSmoothGlowLine(float x1,float y1,float x2,float y2) {
-    int layers = 20;          // more layers = smoother glow
-    float maxWidth = 12.0f;   // glow radius
+const char* fragmentShaderSrc = R"(
+#version 330 core
+in vec3 vColor;
+out vec4 FragColor;
 
-    for(int i = layers; i > 0; --i) {
-        float t = (float)i / layers;
-
-        // smooth falloff (quadratic)
-        float alpha = t * t * 0.08f;
-
-        fsgl::fs::fsSetColor(0.0f, 1.0f, 0.0f);
-        fsgl::fs::fsSetAlpha(alpha);
-        fsgl::fs::fsSetLineWidth(t * maxWidth);
-
-        fsgl::fs::fsDrawLine(x1,y1,x2,y2);
-    }
-
-    // bright core
-    fsgl::fs::fsSetAlpha(1.0f);
-    fsgl::fs::fsSetLineWidth(2.0f);
-    fsgl::fs::fsDrawLine(x1,y1,x2,y2);
+void main() {
+    FragColor = vec4(vColor, 1.0);
 }
+)";
+
+fsgl::fsVertexArray g_vao1, g_vao2, g_vao3;
 
 void render() {
-    fsgl::fs::fsClear(0.0f,0.0f,0.0f);
-
-    Vec3 r[8];
-    for(int i=0;i<8;i++)
-        r[i] = rotate(cube[i]);
-
-    float scale = 0.7f;
-
-    for(int i=0;i<12;i++){
-        Vec3 p1 = r[edges[i][0]];
-        Vec3 p2 = r[edges[i][1]];
-
-        DrawSmoothGlowLine(
-            p1.x * scale, p1.y * scale,
-            p2.x * scale, p2.y * scale
-        );
-    }
-
-    angle += 0.01f;
+    fsgl::fs::fsClear(0.1f, 0.1f, 0.15f);
+    
+    fsgl::fs::fsBindVertexArray(g_vao1);
+    fsgl::fs::fsDrawArrays(0x0004, 0, 3);
+    
+    fsgl::fs::fsBindVertexArray(g_vao2);
+    fsgl::fs::fsDrawArrays(0x0004, 0, 3);
+    
+    fsgl::fs::fsBindVertexArray(g_vao3);
+    fsgl::fs::fsDrawArrays(0x0004, 0, 3);
 }
 
 int main() {
-    if(fsgl::fs::fsInit() != fsgl::FSOK) return -1;
+    if (fsgl::fs::fsInit() != fsgl::FSOK) return -1;
 
-    fsgl::fsWindow window = fsgl::fs::fsNewWindow("FSGL Glow Cube", 800, 600);
-    if(!window) return -1;
+    fsgl::fsWindow window = fsgl::fs::fsNewWindow("Colored Triangles", 800, 600);
+    if (!window) {
+        fsgl::fs::fsDrop();
+        return -1;
+    }
 
     fsgl::fs::fsSetContext(window);
     fsgl::fs::fsInitContext();
 
-    fsgl::fs::fsEnableBlend();
-    fsgl::fs::fsSetBlendAdditive();
+    fsgl::fsShader shader = fsgl::fs::fsCreateShader(vertexShaderSrc, fragmentShaderSrc);
+    fsgl::fs::fsUseShader(shader);
+
+    float triangle1[] = {
+        -0.7f, -0.5f, 1.0f, 0.0f, 0.0f,
+        -0.2f, -0.5f, 0.0f, 1.0f, 0.0f,
+        -0.45f, 0.2f, 0.0f, 0.0f, 1.0f
+    };
+
+    float triangle2[] = {
+        0.2f, -0.5f, 1.0f, 1.0f, 0.0f,
+        0.7f, -0.5f, 1.0f, 0.0f, 1.0f,
+        0.45f, 0.2f, 0.0f, 1.0f, 1.0f
+    };
+
+    float triangle3[] = {
+        -0.3f, 0.3f, 1.0f, 0.5f, 0.0f,
+        0.3f, 0.3f, 0.0f, 1.0f, 0.5f,
+        0.0f, 0.7f, 0.5f, 0.0f, 1.0f
+    };
+
+    fsgl::fsVertexBuffer vbo1 = fsgl::fs::fsCreateVertexBuffer(triangle1, sizeof(triangle1));
+    fsgl::fsVertexBuffer vbo2 = fsgl::fs::fsCreateVertexBuffer(triangle2, sizeof(triangle2));
+    fsgl::fsVertexBuffer vbo3 = fsgl::fs::fsCreateVertexBuffer(triangle3, sizeof(triangle3));
+
+    g_vao1 = fsgl::fs::fsCreateVertexArray();
+    g_vao2 = fsgl::fs::fsCreateVertexArray();
+    g_vao3 = fsgl::fs::fsCreateVertexArray();
+
+    fsgl::fs::fsBindVertexArray(g_vao1);
+    fsgl::fs::fsBindVertexBuffer(vbo1);
+    fsgl::fs::fsSetVertexAttribute(0, 2, 5 * sizeof(float), 0);
+    fsgl::fs::fsSetVertexAttribute(1, 3, 5 * sizeof(float), 2 * sizeof(float));
+
+    fsgl::fs::fsBindVertexArray(g_vao2);
+    fsgl::fs::fsBindVertexBuffer(vbo2);
+    fsgl::fs::fsSetVertexAttribute(0, 2, 5 * sizeof(float), 0);
+    fsgl::fs::fsSetVertexAttribute(1, 3, 5 * sizeof(float), 2 * sizeof(float));
+
+    fsgl::fs::fsBindVertexArray(g_vao3);
+    fsgl::fs::fsBindVertexBuffer(vbo3);
+    fsgl::fs::fsSetVertexAttribute(0, 2, 5 * sizeof(float), 0);
+    fsgl::fs::fsSetVertexAttribute(1, 3, 5 * sizeof(float), 2 * sizeof(float));
 
     fsgl::fs::fsPollEvents(window, render);
 
+    fsgl::fs::fsDeleteVertexArray(g_vao1);
+    fsgl::fs::fsDeleteVertexArray(g_vao2);
+    fsgl::fs::fsDeleteVertexArray(g_vao3);
+    fsgl::fs::fsDeleteVertexBuffer(vbo1);
+    fsgl::fs::fsDeleteVertexBuffer(vbo2);
+    fsgl::fs::fsDeleteVertexBuffer(vbo3);
+    fsgl::fs::fsDeleteShader(shader);
     fsgl::fs::fsDrop();
+
     return 0;
 }

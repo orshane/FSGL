@@ -5,6 +5,9 @@
 
 namespace fsgl {
 
+    static float currentR = 1.0f, currentG = 1.0f, currentB = 1.0f, currentA = 1.0f;
+    static fsShader currentShader = 0;
+
     static GLuint compileShader(GLenum type, const char* src) {
         GLuint shader = glCreateShader(type);
         glShaderSource(shader, 1, &src, nullptr);
@@ -22,23 +25,31 @@ namespace fsgl {
         return shader;
     }
 
-    static float currentR = 1.0, currentG = 1.0, currentB = 1.0, currentA = 1.0f;
-
+    static GLint getPositionAttribLocation() {
+        GLint currentProgram;
+        glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
+        
+        if(currentProgram) {
+            GLint loc = glGetAttribLocation(currentProgram, "aPos");
+            if(loc == -1) loc = glGetAttribLocation(currentProgram, "vertexPosition");
+            if(loc == -1) loc = glGetAttribLocation(currentProgram, "position");
+            if(loc == -1) loc = glGetAttribLocation(currentProgram, "Position");
+            if(loc == -1) loc = glGetAttribLocation(currentProgram, "inPosition");
+            if(loc == -1) loc = 0;
+            return loc;
+        }
+        
+        return 0;
+    }
 
     fsResult fs::fsInit() {
         return glfwInit() ? FSOK : FSERR;
     }
 
     fsResult fs::fsSetContext(fsWindow win) {
-        if(!win)
-            return FSERR;
-
+        if(!win) return FSERR;
         glfwMakeContextCurrent(win);
-
-        if(glfwGetCurrentContext() != win)
-            return FSERR;
-
-        return FSOK;
+        return (glfwGetCurrentContext() == win) ? FSOK : FSERR;
     }
 
     fsResult fs::fsInitContext() {
@@ -71,34 +82,60 @@ namespace fsgl {
         currentR = r;
         currentG = g;
         currentB = b;
-        glColor3f(r, g, b);
+        if(!currentShader) {
+            glColor3f(r, g, b);
+        }
     }
 
     void fs::fsDrawLine(float x1, float y1, float x2, float y2) {
+        GLint posLoc = getPositionAttribLocation();
+        
         glBegin(GL_LINES);
-        glColor4f(currentR, currentG, currentB, currentA);
-        glVertex2f(x1, y1);
-        glVertex2f(x2, y2);
+        if(currentShader) {
+            glVertexAttrib2f(posLoc, x1, y1);
+            glVertexAttrib2f(posLoc, x2, y2);
+        } else {
+            glColor4f(currentR, currentG, currentB, currentA);
+            glVertex2f(x1, y1);
+            glVertex2f(x2, y2);
+        }
         glEnd();
     }
 
-    void fs::fsDrawTriangle(
-            float x1, float y1,
-            float x2, float y2,
-            float x3, float y3,
-            bool fill
-    ) {
-
+    void fs::fsDrawTriangle(float x1, float y1, float x2, float y2, float x3, float y3, bool fill) {
+        GLint posLoc = getPositionAttribLocation();
+        
         if(!fill) {
-            fs::fsDrawLine(x1, y1, x2, y2);
-            fs::fsDrawLine(x2, y2, x3, y3);
-            fs::fsDrawLine(x3, y3, x1, y1);
+            glBegin(GL_LINES);
+            if(currentShader) {
+                glVertexAttrib2f(posLoc, x1, y1);
+                glVertexAttrib2f(posLoc, x2, y2);
+                glVertexAttrib2f(posLoc, x2, y2);
+                glVertexAttrib2f(posLoc, x3, y3);
+                glVertexAttrib2f(posLoc, x3, y3);
+                glVertexAttrib2f(posLoc, x1, y1);
+            } else {
+                glColor4f(currentR, currentG, currentB, currentA);
+                glVertex2f(x1, y1);
+                glVertex2f(x2, y2);
+                glVertex2f(x2, y2);
+                glVertex2f(x3, y3);
+                glVertex2f(x3, y3);
+                glVertex2f(x1, y1);
+            }
+            glEnd();
         } else {
             glBegin(GL_TRIANGLES);
-            glColor3f(currentR, currentG, currentB);
-            glVertex2f(x1, y1);
-            glVertex2f(x2, y2);
-            glVertex2f(x3, y3);
+            if(currentShader) {
+                glVertexAttrib2f(posLoc, x1, y1);
+                glVertexAttrib2f(posLoc, x2, y2);
+                glVertexAttrib2f(posLoc, x3, y3);
+            } else {
+                glColor4f(currentR, currentG, currentB, currentA);
+                glVertex2f(x1, y1);
+                glVertex2f(x2, y2);
+                glVertex2f(x3, y3);
+            }
             glEnd();
         }
     }
@@ -109,11 +146,14 @@ namespace fsgl {
 
     void fs::fsSetAlpha(float a) {
         currentA = a;
+        if(!currentShader) {
+            glColor4f(currentR, currentG, currentB, currentA);
+        }
     }
 
     void fs::fsDrop() {
         glfwTerminate();
-        std::cout << "fsDrop: Successful drop.";
+        std::cout << "fsDrop: Successful drop." << std::endl;
     }
 
     fsShader fs::fsCreateShader(const char* vertexSrc, const char* fragmentSrc) {
@@ -141,6 +181,7 @@ namespace fsgl {
     }
 
     void fs::fsUseShader(fsShader shader) {
+        currentShader = shader;
         glUseProgram(shader);
     }
 
@@ -158,5 +199,52 @@ namespace fsgl {
 
     void fs::fsSetBlendAlpha() {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
+
+    fsVertexBuffer fs::fsCreateVertexBuffer(const float* vertices, size_t size) {
+        GLuint vbo;
+        glGenBuffers(1, &vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        return vbo;
+    }
+
+    fsVertexArray fs::fsCreateVertexArray() {
+        GLuint vao;
+        glGenVertexArrays(1, &vao);
+        return vao;
+    }
+
+    void fs::fsBindVertexArray(fsVertexArray vao) {
+        glBindVertexArray(vao);
+    }
+
+    void fs::fsBindVertexBuffer(fsVertexBuffer vbo) {
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    }
+
+    void fs::fsSetVertexAttribute(uint32_t index, int size, int stride, int offset) {
+        glVertexAttribPointer(index, size, GL_FLOAT, GL_FALSE, stride, (void*)(intptr_t)offset);
+        glEnableVertexAttribArray(index);
+    }
+
+    void fs::fsDrawArrays(int mode, int first, int count) {
+        glDrawArrays(mode, first, count);
+    }
+
+    void fs::fsDeleteVertexArray(fsVertexArray vao) {
+        glDeleteVertexArrays(1, &vao);
+    }
+
+    void fs::fsDeleteVertexBuffer(fsVertexBuffer vbo) {
+        glDeleteBuffers(1, &vbo);
+    }
+
+    void fs::fsDeleteShader(fsShader shader) {
+        glDeleteProgram(shader);
+        if(currentShader == shader) {
+            currentShader = 0;
+        }
     }
 }
