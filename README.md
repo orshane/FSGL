@@ -24,7 +24,7 @@ Run the demo binary
 bin/FSGL
 
 Or compile from source
-clang++ *.cpp -o FSGL -g -lglfw -lGL -lGLEW -lpthread -lX11
+clang++ *.cpp -o FSGL -g -lglfw -lGL -lGLEW -lm -lpthread -lX11
 ./FSGL
 
 Minimal Example
