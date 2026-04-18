@@ -21,7 +21,7 @@ Quick Start
 
 Run the demo binary
 
-./FSGL_TriangleDemo. 
+bin/FSGL
 
 Or compile from source
 clang++ *.cpp -o FSGL -g -lglfw -lGL -lGLEW -lpthread -lX11
@@ -32,23 +32,23 @@ Minimal Example
 #include "fsgl.hpp"
 
 void render() {
-    fsgl::fs::fsClear(0.1f, 0.1f, 0.1f);
-    fsgl::fs::fsSetColor(0.0f, 1.0f, 0.0f);
-    fsgl::fs::fsDrawTriangle(-0.5f, -0.5,
+    fsgl::fsClear(0.1f, 0.1f, 0.1f);
+    fsgl::fsSetColor(0.0f, 1.0f, 0.0f);
+    fsgl::fsDrawTriangle(-0.5f, -0.5,
                               0.5f, -0.5,
                               0.0f, 0.5f, true);
 }
 
 int main() {
-    if(fsgl::fs::fsInit() != fsgl::FSOK) return -1;
+    if(fsgl::fsInit() != fsgl::FSOK) return -1;
 
-    fsgl::fsWindow window = fsgl::fs::fsNewWindow("FSGL Demo", 800, 600);
+    fsgl::fsWindow window = fsgl::fsNewWindow("FSGL Demo", 800, 600);
     if(!window) return fsgl::FSERR;
 
-    fsgl::fs::fsSetContext(window);
-    fsgl::fs::fsInitContext();
-    fsgl::fs::fsPollEvents(window, render);
-    fsgl::fs::fsDrop();
+    fsgl::fsSetContext(window);
+    fsgl::fsInitContext();
+    fsgl::fsPollEvents(window, render);
+    fsgl::fsDrop();
     return 0;
 }
 ```
