@@ -20,7 +20,7 @@ enum fsResult {
     FSERR
 };
 
-// loop callback (IMPORTANT: no lambdas with capture here)
+// loop callback 
 using fsLoopCallback = void (*)();
 
 // =====================
@@ -65,7 +65,7 @@ void fsUseShader(fsShader shader);
 void fsDeleteShader(fsShader shader);
 
 // =====================
-// VERTEX (FUTURE SAFE)
+// VERTEX 
 // =====================
 fsVertexBuffer fsCreateVertexBuffer(const float* vertices, size_t size);
 fsVertexArray fsCreateVertexArray();
